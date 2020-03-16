@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="breadcrumb mb-4">
+    <li class="breadcrumb-item pt-1 text-center"><a href="{% url 'accounts:home' %}">Home</a></li>
+    <li class="breadcrumb-item pt-1 text-center">Candidate List </li>
+</div>
+<table class="table mb-5">
+    <thead class="thead-light">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Mobile</th>
+            <th>Email</th>
+            <th>Info</th>
+        </tr>
+    </thead>
+    {% for candidate in object_list %}
+        <tr>
+            <td>{{ candidate.id }}</td>
+            <td>{{ candidate }}</td>
+            <td>{{ candidate.mobile }}</td>
+            <td>{{ candidate.email }}</td>
+            <td><a href="{{ candidate.get_absolute_url }}">Show More...</a></td>
+        </tr>
+    {% endfor %}
+
+</table>
+
+{% endblock %}

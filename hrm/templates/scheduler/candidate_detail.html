@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="breadcrumb mb-4">
+    <li class="breadcrumb-item pt-1 text-center"><a href="{% url 'accounts:home' %}">Home</a></li>
+    <li class="breadcrumb-item pt-1 text-center"><a href="{% url 'scheduler:candidate_list' %}">Candidate List</a></li>
+    <li class="breadcrumb-item pt-1 text-center">Candidate Detail</li>
+</div>
+{{ candidate }}
+{{ candidate }}
+
+<div class="container border py-2 px-2">
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="form-row">
+            {% for field in form %}
+            <div class="col-md-6">
+                <div class="form-group">
+                    {% if field.errors %}
+                        <ol>
+                        {% for error in field.errors %}
+                            <li><strong>{{ error|escape }}</strong></li>
+                        {% endfor %}
+                        </ol>
+                    {% endif %}
+                    <label class="small mb-1" for="{{ order_task.schedule_on.id_for_label }}">
+                        {{ field.label_tag }}</label>
+                    {{ field }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <button class="btn btn-block btn-success" type="submit">Make Schedule</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript">
+    $(function () {
+        $("#id_schedule_time").datetimepicker({
+        format: 'YYYY-MM-DD HH:mm',
+        minDate: moment()
+    });
+    });
+</script>
+{% endblock %}

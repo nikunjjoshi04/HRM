@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'phonenumber_field',
+    'scheduler.apps.SchedulerConfig',
     'accounts.apps.AccountsConfig',
 ]
 
@@ -74,10 +76,20 @@ WSGI_APPLICATION = 'hrm.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'hrm',
+        'HOST': 'localhost',
+        'USER': 'quixom',
+        'PASSWORD': 'root',
     }
 }
 
@@ -124,4 +136,7 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
 ]
 
-LOGIN_REDIRECT_URL = 'accounts:home'
+PHONENUMBER_DB_FORMAT = 'NATIONAL'
+
+# LOGIN_REDIRECT_URL = 'accounts:home'
+LOGOUT_REDIRECT_URL = 'accounts:home'
