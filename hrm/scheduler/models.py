@@ -1,6 +1,7 @@
 from django.db import models
 from accounts.models import Candidate
 from django.contrib.auth.models import User
+from django.shortcuts import reverse
 
 # Create your models here.
 
@@ -25,5 +26,7 @@ class Schedule(models.Model):
     def __str__(self):
         return '{} - {}'.format(self.candidate, self.status)
 
+    def get_absolute_url(self):
+        return reverse('scheduler:interviewer_schedule_detail', args=[self.pk])
 
 

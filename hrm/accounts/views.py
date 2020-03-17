@@ -23,4 +23,4 @@ class LoginView(LoginView):
         if self.request.user.is_staff:
             return url or reverse('scheduler:candidate_list')
         else:
-            return url or reverse('scheduler:')
+            return url or reverse('scheduler:interviewer_schedule_list')

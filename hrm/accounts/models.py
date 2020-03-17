@@ -33,14 +33,15 @@ class Candidate(models.Model):
     last_name = models.CharField(max_length=30)
     birth_date = models.DateField()
     mobile = PhoneNumberField()
-    email = models.EmailField()
-    token = models.CharField(max_length=30)
-    resume = models.FileField()
+    email = models.EmailField(unique=True)
+    token = models.CharField(max_length=30, null=True, blank=True)
+    resume = models.FileField(null=True, blank=True)
     applied_for = models.ForeignKey(Vacancies, on_delete=models.CASCADE)
     status = FSMField(default=SHORTLIST, choices=STATUS_TAG)
+    is_verified = models.BooleanField(default=False)
 
     def __str__(self):
-        return '{} - {}'.format(self.first_name, self.last_name)
+        return self.first_name
 
     def get_absolute_url(self):
         return reverse('scheduler:candidate_detail', args=[self.pk])
@@ -67,7 +68,7 @@ class Address(models.Model):
     city = models.CharField(max_length=100)
     street = models.CharField(max_length=100)
     landmark = models.CharField(max_length=100)
-    primary = models.BooleanField(default=True)
+    primary = models.BooleanField(default=False)
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -89,6 +90,7 @@ class Evaluation(models.Model):
     ABOVE_AVERAGE = 'above_average'
     EXCEPTIONAL = 'exceptional'
     QUESTION_TAG = [
+        (NOT_SPECIFIED, 'Not Specified'),
         (UNSATISFACTORY, 'Unsatisfactory'),
         (SATISFACTORY, 'satisfactory'),
         (AVERAGE, 'Average'),
@@ -96,8 +98,8 @@ class Evaluation(models.Model):
         (EXCEPTIONAL, 'Exceptional'),
     ]
     question = models.ForeignKey(Questions, on_delete=models.CASCADE)
-    question_tag = models.CharField(default=NOT_SPECIFIED, choices=QUESTION_TAG, max_length=50)
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
+    question_tag = models.CharField(default=NOT_SPECIFIED, choices=QUESTION_TAG, max_length=50)
 
     def __str__(self):
-        return '{} - {}'.format(self.question, self.question_tag)
+        return '{} {}'.format(self.candidate, self.question_tag)

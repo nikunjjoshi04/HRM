@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block title %}
+<title>Candidate Apply</title>
+{% endblock %}
+{% block content %}
+<div class="breadcrumb mb-4">
+    <li class="breadcrumb-item pt-1 text-center"><a href="{% url 'accounts:home' %}">Home</a></li>
+    <li class="breadcrumb-item pt-1 text-center">Candidate Apply</li>
+</div>
+<h1>Verify</h1>
+<p>{{ candidate }}</p>
+<div class="border py-2 px-2">
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.management_form }}
+        {{ form.non_field_errors }}
+        <div class="form-row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    {% if form.state.errors %}
+                    <ol>
+                        {% for error in form.state.errors %}
+                        <li><strong>{{ error|escape }}</strong></li>
+                        {% endfor %}
+                    </ol>
+                    {% endif %}
+                    <label class="small mb-1" for="{{ form.state.id_for_label }}">
+                        {{ form.state.label_tag }}</label>
+                    {{ form.state }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    {% if form.city.errors %}
+                    <ol>
+                        {% for error in form.city.errors %}
+                        <li><strong>{{ error|escape }}</strong></li>
+                        {% endfor %}
+                    </ol>
+                    {% endif %}
+                    <label class="small mb-1" for="{{ form.city.id_for_label }}">
+                        {{ form.city.label_tag }}</label>
+                    {{ form.city }}
+                </div>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    {% if form.street.errors %}
+                    <ol>
+                        {% for error in form.street.errors %}
+                        <li><strong>{{ error|escape }}</strong></li>
+                        {% endfor %}
+                    </ol>
+                    {% endif %}
+                    <label class="small mb-1" for="{{ order_task.street.id_for_label }}">
+                        {{ form.street.label_tag }}</label>
+                    {{ form.street }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    {% if form.landmark.errors %}
+                    <ol>
+                        {% for error in form.landmark.errors %}
+                        <li><strong>{{ error|escape }}</strong></li>
+                        {% endfor %}
+                    </ol>
+                    {% endif %}
+                    <label class="small mb-1" for="{{ form.landmark.id_for_label }}">
+                        {{ form.landmark.label_tag }}</label>
+                    {{ form.landmark }}
+                </div>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="col-md-2">
+                <div class="form-group">
+                    {% if form.primary.errors %}
+                    <ol>
+                        {% for error in form.primary.errors %}
+                        <li><strong>{{ error|escape }}</strong></li>
+                        {% endfor %}
+                    </ol>
+                    {% endif %}
+                    <label class="small mb-1" for="{{ form.primary.id_for_label }}">
+                        {{ form.primary.label_tag }}{{ form.primary }}</label>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="form-group">
+                    {% if form.file.errors %}
+                    <ol>
+                        {% for error in form.file.errors %}
+                        <li><strong>{{ error|escape }}</strong></li>
+                        {% endfor %}
+                    </ol>
+                    {% endif %}
+                    <label class="small mb-1" for="{{ form.file.id_for_label }}">
+                        {{ form.file.label_tag }}</label><br>
+                    {{ form.file }}
+                </div>
+            </div>
+        </div>
+        <button class="btn btn-block btn-success" type="submit">Make Schedule</button>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript">
+    $(function () {
+        $("#id_birth_date").datetimepicker({
+        format: 'YYYY-MM-DD',
+        //minDate: moment()
+    });
+    });
+
+
+
+
+
+
+
+</script>
+{% endblock %}
