@@ -7,6 +7,13 @@
     <li class="breadcrumb-item pt-1 text-center"><a href="{% url 'accounts:home' %}">Home</a></li>
     <li class="breadcrumb-item pt-1 text-center">Candidate Apply</li>
 </div>
+
+<div class="progress" style="height: 30px;">
+  <div class="progress-bar progress-bar-striped bg-info progress-bar-animated"  role="progressbar" style="width: 33%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">Basic Info</div>
+  <div class="progress-bar bg-secondary text-dark border-left" role="progressbar" style="width: 33%" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">Verified</div>
+  <div class="progress-bar bg-secondary text-dark border-left" role="progressbar" style="width: 35%" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100">Details</div>
+</div>
+
 <h1>Apply</h1>
 <form method="POST">
     {% csrf_token %}

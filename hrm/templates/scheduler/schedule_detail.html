@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+<title>Candidate Detail</title>
+{% endblock %}
+{% block content %}
+<div class="breadcrumb mb-4">
+    <li class="breadcrumb-item pt-1 text-center"><a href="{% url 'scheduler:hr_dashboard' %}">Dashboard</a></li>
+    <!--    <li class="breadcrumb-item pt-1 text-center">Candidate Profile</li>-->
+</div>
+
+<div class="container">
+    <h3 class="mb-3">{{ schedule.candidate.first_name.capitalize }}
+        <small>{{ schedule.candidate.last_name.capitalize }}
+        </small>
+    </h3>
+    <div class="row my-3">
+        <div class="col-md-6">
+            <h6>Applied For :-</h6>
+            <p class="ml-5 mt-2"> {{ schedule.candidate.applied_for.post.capitalize }}</p>
+            <h6>Contact :-</h6>
+            <div class="ml-5">
+                <p><i class="fa fa-mobile" aria-hidden="true"></i> {{ schedule.candidate.mobile }}</p>
+                <p><i class="fa fa-envelope-o" aria-hidden="true"></i> {{ schedule.candidate.email }}</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="row">
+                <h6> &emsp;Experience :- </h6>&emsp;
+                <p> {{ schedule.candidate.experience }} </p>
+            </div>
+            <hr>
+            <h5>Address :- </h5>
+            <div class="ml-5">
+                <p> {{ schedule.candidate.address.first.city.capitalize }} <small>
+                    ({{ schedule.candidate.address.first.state.capitalize }})</small></p>
+                <p> {{ schedule.candidate.address.first.street.capitalize }} </p>
+                <p> {{ schedule.candidate.address.first.landmark }} - 360470</p>
+            </div>
+        </div>
+    </div>
+    <!--/row-->
+</div>
+
+<hr>
+
+
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript">
+    $(function () {
+        $("#id_schedule_time").datetimepicker({
+        format: 'YYYY-MM-DD HH:mm',
+        minDate: moment()
+    });
+    });
+
+
+
+
+
+
+
+
+
+</script>
+{% endblock %}

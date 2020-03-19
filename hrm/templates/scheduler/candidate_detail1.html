@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}
+    <title>Candidate Detail</title>
+{% endblock %}
+{% block content %}
+<div class="breadcrumb mb-4">
+    <li class="breadcrumb-item pt-1 text-center"><a href="{% url 'accounts:home' %}">Home</a></li>
+    <li class="breadcrumb-item pt-1 text-center"><a href="{% url 'scheduler:hr_dashboard' %}">Dashboard</a></li>
+    <li class="breadcrumb-item pt-1 text-center">Candidate Detail</li>
+</div>
+{{ candidate }}
+{{ candidate }}
+
+<div class="container border py-2 px-2">
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="form-row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    {% if form.interview_type.errors %}
+                    <ol>
+                        {% for error in form.interview_type.errors %}
+                        <li><strong>{{ error|escape }}</strong></li>
+                        {% endfor %}
+                    </ol>
+                    {% endif %}
+                    <label class="small mb-1" for="{{ form.interview_type.id_for_label }}">
+                        {{ form.interview_type.label_tag }}</label>
+                    {{ form.interview_type }}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    {% if form.interviewer.errors %}
+                    <ol>
+                        {% for error in form.interviewer.errors %}
+                        <li><strong>{{ error|escape }}</strong></li>
+                        {% endfor %}
+                    </ol>
+                    {% endif %}
+                    <label class="small mb-1" for="{{ form.interviewer.id_for_label }}">
+                        {{ form.interviewer.label_tag }}</label>
+                    {{ form.interviewer }}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    {% if form.schedule_time.errors %}
+                    <ol>
+                        {% for error in form.schedule_time.errors %}
+                        <li><strong>{{ error|escape }}</strong></li>
+                        {% endfor %}
+                    </ol>
+                    {% endif %}
+                    <label class="small mb-1" for="{{ form.schedule_time.id_for_label }}">
+                        {{ form.schedule_time.label_tag }}</label>
+                    {{ form.schedule_time }}
+                </div>
+            </div>
+        </div>
+        <button class="btn btn-block btn-success" type="submit">Make Schedule</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript">
+    $(function () {
+        $("#id_schedule_time").datetimepicker({
+        format: 'YYYY-MM-DD HH:mm',
+        minDate: moment()
+    });
+    });
+</script>
+{% endblock %}

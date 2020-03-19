@@ -16,7 +16,7 @@ class Schedule(models.Model):
         (REJECTED, 'Rejected'),
     ]
 
-    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE, related_name='candidate_schedule')
     hr = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hr')
     interviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='interviewer')
     schedule_time = models.DateTimeField()
@@ -27,6 +27,6 @@ class Schedule(models.Model):
         return '{} - {}'.format(self.candidate, self.status)
 
     def get_absolute_url(self):
-        return reverse('scheduler:interviewer_schedule_detail', args=[self.pk])
+        return reverse('scheduler:schedule_detail', args=[self.pk])
 
 

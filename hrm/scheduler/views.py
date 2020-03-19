@@ -34,6 +34,40 @@ class Apply(FormView):
         return super(Apply, self).form_valid(form=form)
 
 
+class VerifyView(FormView):
+    # AddressFormSet = formset_factory(form=AddressForm, extra=2)
+    form_class = AddressForm
+    template_name = 'scheduler/verify.html'
+
+    def form_valid(self, form):
+        experience = form.cleaned_data['experience']
+        candidate = Candidate.objects.get(token=self.kwargs.get('token', None))
+        resume = self.request.FILES['file']
+        candidate.resume = resume
+        candidate.experience = experience
+        candidate.save()
+        form.instance.candidate = candidate
+        form.save()
+        return super(VerifyView, self).form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super(VerifyView, self).get_context_data(**kwargs)
+        context['candidate'] = Candidate.objects.get(token=self.kwargs.get('token', None))
+        return context
+
+    def get_success_url(self):
+        return reverse('scheduler:profile', args=[self.kwargs.get('token', None)])
+
+
+class ProfileView(TemplateView):
+    template_name = 'scheduler/candidate_profile.html'
+
+    def get_context_data(self, **kwargs):
+        kwargs = super(ProfileView, self).get_context_data()
+        kwargs['candidate'] = Candidate.objects.get(token=self.kwargs.get('token', None))
+        return kwargs
+
+
 class List(PermissionRequiredMixin, ListView):
     permission_required = None
     login_url = 'accounts:login'
@@ -50,12 +84,18 @@ class Detail(PermissionRequiredMixin, DetailView):
     template_name = None
 
 
-class CandidateListView(List):
+class HRDashboardView(TemplateView):
     permission_required = ['accounts.view_candidate']
     login_url = 'accounts:login'
     permission_denied_message = 'Not Allow...!!!'
     model = Candidate
-    template_name = 'scheduler/candidate_list.html'
+    template_name = 'scheduler/hr_dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(HRDashboardView, self).get_context_data()
+        context['candidates'] = Candidate.objects.all()
+        context['schedules'] = Schedule.objects.select_related('candidate').all()
+        return context
 
 
 class CandidateDetailView(Detail, FormView):
@@ -68,9 +108,23 @@ class CandidateDetailView(Detail, FormView):
     model = Candidate
     template_name = 'scheduler/candidate_detail.html'
     form_class = ScheduleForm
-    success_url = reverse_lazy('scheduler:candidate_list')
+    # success_url = reverse_lazy('scheduler:hr_dashboard')
 
     def form_valid(self, form):
+        interview_type = form.cleaned_data['interview_type']
+        print(interview_type)
+        candidate = Candidate.objects.get(id=self.kwargs.get('pk', None))
+        if interview_type == Candidate.TECHNICAL:
+            candidate.technical_round()
+        elif interview_type == Candidate.PRACTICAL:
+            candidate.practical_round()
+        elif interview_type == Candidate.HR:
+            candidate.hr_round()
+        elif interview_type == Candidate.REJECTED:
+            candidate.reject()
+        else:
+            candidate.status = Candidate.SHORTLIST
+        candidate.save()
         form.save()
         return super().form_valid(form)
 
@@ -80,6 +134,9 @@ class CandidateDetailView(Detail, FormView):
         kwargs['user'] = self.request.user
         print(kwargs['pk'])
         return kwargs
+
+    def get_success_url(self):
+        return reverse('scheduler:candidate_detail', args=[self.kwargs.get('pk', None)])
 
 
 class ScheduleListView(PermissionRequiredMixin, ListView):
@@ -101,27 +158,7 @@ class ScheduleDetailView(Detail, FormView):
     login_url = 'accounts:login'
     permission_denied_message = 'Not Allow...!!!'
     model = Schedule
-    template_name = 'scheduler/interviewer_schedule_detail.html'
+    template_name = 'scheduler/schedule_detail.html'
     form_class = ScheduleForm
     success_url = reverse_lazy('scheduler:interviewer_schedule_detail')
 
-
-class VerifyView(FormView):
-    # AddressFormSet = formset_factory(form=AddressForm, extra=2)
-    form_class = AddressForm
-    template_name = 'scheduler/verify.html'
-    success_url = reverse_lazy('accounts:home')
-
-    def form_valid(self, form):
-        # print(self.kwargs['token'])
-        # token = self.kwargs.get('token', None)
-        # candidate = Candidate.objects.get(token=token)
-
-
-        return super(VerifyView, self).form_valid(form)
-
-    def get_context_data(self, **kwargs):
-        token = self.kwargs.get('token', None)
-        context = super(VerifyView, self).get_context_data(**kwargs)
-        context['candidate'] = Candidate.objects.get(token=token)
-        return context

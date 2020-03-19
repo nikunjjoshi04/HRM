@@ -1,40 +1,167 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}
-    <title>Candidate Detail</title>
+<title>Candidate Detail</title>
 {% endblock %}
 {% block content %}
 <div class="breadcrumb mb-4">
-    <li class="breadcrumb-item pt-1 text-center"><a href="{% url 'accounts:home' %}">Home</a></li>
-    <li class="breadcrumb-item pt-1 text-center"><a href="{% url 'scheduler:candidate_list' %}">Candidate List</a></li>
-    <li class="breadcrumb-item pt-1 text-center">Candidate Detail</li>
+    <li class="breadcrumb-item pt-1 text-center"><a href="{% url 'scheduler:hr_dashboard' %}">Dashboard</a></li>
+    <li class="breadcrumb-item pt-1 text-center">Candidate Profile</li>
 </div>
-{{ candidate }}
-{{ candidate }}
 
-<div class="container border py-2 px-2">
-    <form method="POST">
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-        <div class="form-row">
-            {% for field in form %}
-            <div class="col-md-6">
-                <div class="form-group">
-                    {% if field.errors %}
-                        <ol>
-                        {% for error in field.errors %}
-                            <li><strong>{{ error|escape }}</strong></li>
-                        {% endfor %}
-                        </ol>
-                    {% endif %}
-                    <label class="small mb-1" for="{{ order_task.schedule_on.id_for_label }}">
-                        {{ field.label_tag }}</label>
-                    {{ field }}
+<div class="container">
+    <div class="row my-2">
+        <div class="col-lg-8 order-lg-2">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a href="" data-target="#profile" data-toggle="tab" class="nav-link active">Profile</a>
+                </li>
+                <li class="nav-item">
+                    <a href="" data-target="#edit" data-toggle="tab" class="nav-link">Edit</a>
+                </li>
+            </ul>
+            <div class="tab-content py-4">
+                <div class="tab-pane active" id="profile">
+                    <h2 class="mb-4">Candidate Info</h2>
+                    <h5 class="mb-3">{{ candidate.first_name.capitalize }}
+                        <small>{{ candidate.last_name.capitalize }}
+                        </small>
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Applied For :-</h6>
+                            <p> {{ candidate.applied_for.post.capitalize }}</p>
+                            <h6>Contact :-</h6>
+                            <div>
+                                <p><i class="fa fa-mobile" aria-hidden="true"></i> {{ candidate.mobile }}</p>
+                                <p><i class="fa fa-envelope-o" aria-hidden="true"></i> {{ candidate.email }}</p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="row">
+                                <h6> &emsp;Experience :- </h6>&emsp;
+                                <p> {{ candidate.experience }} </p>
+                            </div>
+
+                            <hr>
+                            <p> {{ candidate.address.first.city.capitalize }} <small>
+                                ({{ candidate.address.first.state.capitalize }})</small></p>
+                            <p> {{ candidate.address.first.street.capitalize }} </p>
+                            <p> {{ candidate.address.first.landmark }} - 360470</p>
+                        </div>
+                    </div>
+                    <!--/row-->
+                </div>
+                <div class="tab-pane" id="edit">
+                    <h2 class="mb-4">Create Schedule</h2>
+                    <div class="container py-2 px-2">
+                        <form method="POST">
+                            {% csrf_token %}
+                            {{ form.non_field_errors }}
+                            <div class="form-group">
+                                {% if form.interview_type.errors %}
+                                <ol>
+                                    {% for error in form.interview_type.errors %}
+                                    <li><strong>{{ error|escape }}</strong></li>
+                                    {% endfor %}
+                                </ol>
+                                {% endif %}
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <h4>{{ form.interview_type.label_tag }}</h4>
+                                    </div>
+                                    <div class="col-md-8">
+                                        {{ form.interview_type }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                {% if form.interviewer.errors %}
+                                <ol>
+                                    {% for error in form.interviewer.errors %}
+                                    <li><strong>{{ error|escape }}</strong></li>
+                                    {% endfor %}
+                                </ol>
+                                {% endif %}
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <h4>{{ form.interviewer.label_tag }}</h4>
+                                    </div>
+                                    <div class="col-md-8">
+                                        {{ form.interviewer }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                {% if form.schedule_time.errors %}
+                                <ol>
+                                    {% for error in form.schedule_time.errors %}
+                                    <li><strong>{{ error|escape }}</strong></li>
+                                    {% endfor %}
+                                </ol>
+                                {% endif %}
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <h4>{{ form.schedule_time.label_tag }}</h4>
+                                    </div>
+                                    <div class="col-md-8">
+                                        {{ form.schedule_time }}
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-block btn-success" type="submit">Make Schedule</button>
+                        </form>
+                    </div>
                 </div>
             </div>
-            {% endfor %}
         </div>
-        <button class="btn btn-block btn-success" type="submit">Make Schedule</button>
-    </form>
+        <div class="col-lg-4 order-lg-1 text-center">
+            <img src="//placehold.it/150" class="mx-auto img-fluid img-circle d-block" alt="avatar">
+            <h6 class="mt-2">Upload a different photo</h6>
+            <label class="custom-file disabled">
+                <input type="file" id="file" class="custom-file-input">
+                <span class="custom-file-control">Choose file</span>
+            </label>
+        </div>
+    </div>
+    <table class="table mb-5">
+        <thead class="thead-light">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Schedules For</th>
+            <th>Interviewer</th>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Info</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for each in candidate.schedule_set.all %}
+        <tr>
+            <td>{{ each.id }}</td>
+            <td>
+                {{ each.candidate.first_name }}
+                <small>{{ each.candidate.last_name }}</small>
+            </td>
+            <td>{{ each.candidate.get_status_display }}</td>
+            <td>
+                {{ each.interviewer.first_name.capitalize }}
+                <small>{{ each.interviewer.last_name.capitalize }}</small>
+            </td>
+            <td>
+                {{ each.schedule_time|date:'d-m-Y' }}
+                <br>
+                {{ each.schedule_time|time:'TIME_FORMAT' }}
+            </td>
+            <td>{{ each.get_status_display }}</td>
+            <td><a href="{{ candidate.get_absolute_url }}">Show More...</a></td>
+        </tr>
+
+        {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %}
 
@@ -46,5 +173,7 @@
         minDate: moment()
     });
     });
+
+
 </script>
 {% endblock %}

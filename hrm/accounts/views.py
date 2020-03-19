@@ -21,6 +21,6 @@ class LoginView(LoginView):
         url = self.get_redirect_url()
         print(self.request.user.is_staff)
         if self.request.user.is_staff:
-            return url or reverse('scheduler:candidate_list')
+            return url or reverse('scheduler:hr_dashboard')
         else:
             return url or reverse('scheduler:interviewer_schedule_list')

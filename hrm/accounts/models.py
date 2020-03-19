@@ -29,15 +29,22 @@ class Candidate(models.Model):
         (HR, 'For HR Round'),
         (REJECTED, 'Rejected'),
     ]
+    EXPERIENCE_CHOICE = [
+        ('2', '0 - 1'),
+        ('1 - 2', '1 - 2'),
+        ('2 - 3', '2 - 3'),
+        ('3 - Above', '3 - Above'),
+    ]
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     birth_date = models.DateField()
     mobile = PhoneNumberField()
     email = models.EmailField(unique=True)
     token = models.CharField(max_length=30, null=True, blank=True)
-    resume = models.FileField(null=True, blank=True)
+    resume = models.FileField(upload_to='resumes/', null=True, blank=True)
     applied_for = models.ForeignKey(Vacancies, on_delete=models.CASCADE)
     status = FSMField(default=SHORTLIST, choices=STATUS_TAG)
+    experience = models.CharField(default='0 - 1', choices=EXPERIENCE_CHOICE, max_length=20)
     is_verified = models.BooleanField(default=False)
 
     def __str__(self):
@@ -46,19 +53,19 @@ class Candidate(models.Model):
     def get_absolute_url(self):
         return reverse('scheduler:candidate_detail', args=[self.pk])
 
-    @transition(field='interview_type', source=SHORTLIST, target=TECHNICAL)
+    @transition(field='status', source=SHORTLIST, target=TECHNICAL)
     def technical_round(self):
         pass
 
-    @transition(field='interview_type', source=TECHNICAL, target=PRACTICAL)
+    @transition(field='status', source=TECHNICAL, target=PRACTICAL)
     def practical_round(self):
         pass
 
-    @transition(field='interview_type', source=PRACTICAL, target=HR)
+    @transition(field='status', source=PRACTICAL, target=HR)
     def hr_round(self):
         pass
 
-    @transition(field='interview_type', source=[SHORTLIST, TECHNICAL, PRACTICAL, HR], target=REJECTED)
+    @transition(field='status', source=[SHORTLIST, TECHNICAL, PRACTICAL, HR], target=REJECTED)
     def reject(self):
         pass
 
@@ -68,8 +75,7 @@ class Address(models.Model):
     city = models.CharField(max_length=100)
     street = models.CharField(max_length=100)
     landmark = models.CharField(max_length=100)
-    primary = models.BooleanField(default=False)
-    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE, related_name='address')
 
     def __str__(self):
         return '{} - {}'.format(self.state, self.city)
