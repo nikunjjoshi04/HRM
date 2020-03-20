@@ -9,7 +9,6 @@ urlpatterns = [
     path('profile/<str:token>', ProfileView.as_view(), name='profile'),
     path('hr_dashboard/', HRDashboardView.as_view(), name='hr_dashboard'),
     path('candidate_detail/<int:pk>/', CandidateDetailView.as_view(), name='candidate_detail'),
-    # path('schedule_detail/<int:pk>/', ScheduleDetailView.as_view(), name='schedule_detail'),
     path('schedule_list/', ScheduleListView.as_view(), name='interviewer_schedule_list'),
     path('schedule_detail/<int:pk>/', ScheduleDetailView.as_view(), name='schedule_detail'),
 ]

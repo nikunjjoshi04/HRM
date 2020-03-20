@@ -44,6 +44,35 @@
 
 <hr>
 
+<form action="{%  %}" method="POST">
+    {% csrf_token %}
+    {{ form }}
+    <hr>
+    {{ evaluation_form.management_form }}
+    {% for each in evaluation_form %}
+    {{ each }}
+    <br>
+    {% endfor %}
+    <button type="submit">Submit</button>
+</form>
+
+
+<hr>
+
+<!--{% for each in questions %}-->
+<!--<div class="row">-->
+<!--    <div class="col-md-6">-->
+<!--        <h5>{{ each }}</h5>-->
+<!--    </div>-->
+<!--    <div class="col-md-6">-->
+<!--        <select class="form-control" name="{{ each.id }}">-->
+<!--            {% for each in question_tag %}-->
+<!--            <option value="{{ forloop.counter }}">{{ each.1 }}</option>-->
+<!--            {% endfor %}-->
+<!--        </select>-->
+<!--    </div>-->
+<!--</div>-->
+<!--{% endfor %}-->
 
 {% endblock %}
 
@@ -55,6 +84,11 @@
         minDate: moment()
     });
     });
+
+
+
+
+
 
 
 

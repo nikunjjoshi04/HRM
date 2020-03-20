@@ -1,9 +1,11 @@
 from dataclasses import fields
-
+import datetime
+from django.utils import timezone
 from django import forms
 from accounts.models import Candidate, Address, Questions, Evaluation
 from .models import Schedule
 from django.contrib.auth.models import User
+from django.forms import modelformset_factory, formset_factory, BaseFormSet
 
 
 class ScheduleForm(forms.ModelForm):
@@ -38,14 +40,58 @@ class ScheduleForm(forms.ModelForm):
         return super(ScheduleForm, self).save(commit=commit)
 
 
-class EvaluationForm(forms.ModelForm):
-    class Meta:
-        model = Evaluation
-        fields = ['question', 'schedule_time']
-        # widgets = {
-        #     'interviewer': forms.Select(attrs={'class': 'form-control py-2'}),
-        #     'schedule_time': forms.DateTimeInput(attrs={'class': 'form-control py-2'}),
-        # }
+class EvaluationCommentForm(forms.Form):
+    status = forms.ChoiceField(
+        widget=forms.Select(
+            attrs={
+                'class': 'form-control py-2'
+            }
+        )
+    )
+    comment = forms.CharField(
+        widget=forms.Textarea(
+            attrs={
+                'class': 'form-control py-2',
+                'rows': '5'
+            }
+        )
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(EvaluationCommentForm, self).__init__(*args, **kwargs)
+        self.fields['status'].choices = Schedule.STATUS_TAG
+
+
+class EvaluationForm(forms.Form):
+    question = forms.CharField(
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control py-2',
+                'readonly': True
+            }
+        )
+    )
+    question_tag = forms.ChoiceField()
+
+    def __init__(self, *args, **kwargs):
+        super(EvaluationForm, self).__init__(*args, **kwargs)
+        self.fields['question_tag'].choices = Evaluation.QUESTION_TAG
+
+
+class BaseEvaluationFormSet(BaseFormSet):
+
+        def clean(self):
+            if any(self.errors):
+                return
+            titles = []
+            for form in self.forms:
+                if self.can_delete and self._should_delete_form(form):
+                    continue
+                print(form.cleaned_data)
+                title = form.cleaned_data.get('title')
+                if title in titles:
+                    raise forms.ValidationError("Articles in a set must have distinct titles.")
+                titles.append(title)
 
 
 class ApplyForm(forms.ModelForm):

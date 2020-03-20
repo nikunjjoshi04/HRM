@@ -1,9 +1,11 @@
+from builtins import super
+from django.utils import timezone
 from django.shortcuts import render, reverse
 from django.urls import reverse_lazy
-from accounts.models import Candidate, Address
+from accounts.models import Candidate, Address, Questions, Evaluation
 from django.views.generic import TemplateView, DetailView, ListView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from .forms import ScheduleForm, ApplyForm, AddressForm
+from .forms import ScheduleForm, ApplyForm, AddressForm, EvaluationForm, EvaluationCommentForm, BaseEvaluationFormSet
 from .models import Schedule
 from django.utils.crypto import get_random_string
 from django.forms import modelformset_factory, formset_factory
@@ -155,10 +157,36 @@ class ScheduleDetailView(Detail, FormView):
         'scheduler.change_schedule',
         'scheduler.view_schedule'
     ]
+    EvaluationFormSet = formset_factory(EvaluationForm, formset=BaseEvaluationFormSet, extra=0)
+    formset = EvaluationFormSet(
+        initial=[
+            {
+                'question': "{}".format(i),
+            }for i in Questions.objects.all()
+        ]
+    )
     login_url = 'accounts:login'
     permission_denied_message = 'Not Allow...!!!'
     model = Schedule
     template_name = 'scheduler/schedule_detail.html'
-    form_class = ScheduleForm
-    success_url = reverse_lazy('scheduler:interviewer_schedule_detail')
+    form_class = EvaluationCommentForm
 
+    def form_valid(self, form):
+        print(form.cleaned_data)
+        print(self.formset)
+        if self.formset.is_valid():
+            print('valid')
+            print('valid')
+            for each in self.formset.ordered_forms:
+                print(each.cleaned_data)
+        return super(ScheduleDetailView, self).form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super(ScheduleDetailView, self).get_context_data()
+        context['questions'] = Questions.objects.all()
+        context['question_tag'] = Evaluation.QUESTION_TAG
+        context['evaluation_form'] = self.formset
+        return context
+
+    def get_success_url(self):
+        return reverse('scheduler:schedule_detail', args=[self.kwargs.get('pk', None)])
