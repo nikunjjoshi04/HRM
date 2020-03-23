@@ -5,10 +5,11 @@ from django.urls import reverse_lazy
 from accounts.models import Candidate, Address, Questions, Evaluation
 from django.views.generic import TemplateView, DetailView, ListView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from .forms import ScheduleForm, ApplyForm, AddressForm, EvaluationForm, EvaluationCommentForm, BaseEvaluationFormSet
+from .forms import ScheduleForm, ApplyForm, AddressForm, EvaluationForm, EvaluationCommentForm
 from .models import Schedule
 from django.utils.crypto import get_random_string
 from django.forms import modelformset_factory, formset_factory
+from extra_views import FormSetView
 from .utils import URL
 from django.conf import settings
 from django.core.mail import send_mail
@@ -152,41 +153,50 @@ class ScheduleListView(PermissionRequiredMixin, ListView):
     template_name = 'scheduler/interviewer_schedule_list.html'
 
 
-class ScheduleDetailView(Detail, FormView):
-    permission_required = [
-        'scheduler.change_schedule',
-        'scheduler.view_schedule'
-    ]
-    EvaluationFormSet = formset_factory(EvaluationForm, formset=BaseEvaluationFormSet, extra=0)
-    formset = EvaluationFormSet(
-        initial=[
-            {
-                'question': "{}".format(i),
-            }for i in Questions.objects.all()
-        ]
-    )
-    login_url = 'accounts:login'
-    permission_denied_message = 'Not Allow...!!!'
-    model = Schedule
+class ScheduleDetailView(FormSetView):
     template_name = 'scheduler/schedule_detail.html'
-    form_class = EvaluationCommentForm
+    form_class = EvaluationForm
+    # initial = [{'question': 'QUE1'}, {'question': 'QUE2'}]
+    factory_kwargs = {'extra': 0, 'max_num': None,
+                      'can_order': False, 'can_delete': False}
+    comment_form = EvaluationCommentForm
 
-    def form_valid(self, form):
-        print(form.cleaned_data)
-        print(self.formset)
-        if self.formset.is_valid():
-            print('valid')
-            print('valid')
-            for each in self.formset.ordered_forms:
-                print(each.cleaned_data)
-        return super(ScheduleDetailView, self).form_valid(form)
-
-    def get_context_data(self, **kwargs):
-        context = super(ScheduleDetailView, self).get_context_data()
-        context['questions'] = Questions.objects.all()
-        context['question_tag'] = Evaluation.QUESTION_TAG
-        context['evaluation_form'] = self.formset
-        return context
+    def formset_valid(self, formset):
+        schedule = Schedule.objects.get(id=self.kwargs.get('pk', None))
+        for each in formset:
+            question = each.cleaned_data.get('question', None)
+            question_tag = each.cleaned_data.get('question_tag', None)
+            questions_obj = Questions.objects.get(question=question)
+            Evaluation.objects.create(
+                question=questions_obj,
+                candidate=schedule.candidate,
+                question_tag=question_tag
+            )
+        form_comment = self.comment_form(self.request.POST)
+        if form_comment.is_valid():
+            comment = form_comment.cleaned_data.get('comment', None)
+            status = form_comment.cleaned_data.get('status', None)
+            schedule.comment = comment
+            schedule.status = status
+            schedule.save()
+        return super(ScheduleDetailView, self).formset_valid(formset)
 
     def get_success_url(self):
         return reverse('scheduler:schedule_detail', args=[self.kwargs.get('pk', None)])
+
+    def formset_invalid(self, formset):
+        print(formset)
+        return super(ScheduleDetailView, self).formset_invalid(formset)
+
+    def get_initial(self):
+        initial = []
+        for each in Questions.objects.all():
+            initial.append({'question': each.question})
+        return initial
+
+    def get_context_data(self, **kwargs):
+        pk = self.kwargs.get('pk', None)
+        context = super(ScheduleDetailView, self).get_context_data(**kwargs)
+        context['schedule'] = Schedule.objects.get(id=pk)
+        context['comment_form'] = self.comment_form
+        return context

@@ -23,6 +23,10 @@
                 <p><i class="fa fa-mobile" aria-hidden="true"></i> {{ schedule.candidate.mobile }}</p>
                 <p><i class="fa fa-envelope-o" aria-hidden="true"></i> {{ schedule.candidate.email }}</p>
             </div>
+            <h6>Interviewer :-</h6>
+            <div class="ml-5">
+                <p><i class="fa fa-user-o" aria-hidden="true"></i> {{ schedule.interviewer.get_full_name.capitalize}}</p>
+            </div>
         </div>
         <div class="col-md-6">
             <div class="row">
@@ -41,38 +45,97 @@
     </div>
     <!--/row-->
 </div>
-
 <hr>
 
-<form action="{%  %}" method="POST">
+{% if schedule.comment == '' and user == schedule.interviewer %}
+<form method="POST">
     {% csrf_token %}
-    {{ form }}
+    {{ formset.management_form }}
+    {% for form in formset %}
+    {{ form.non_field_errors }}
+    <div class="form-group">
+        {% if form.question.errors %}
+        <ol>
+            {% for error in form.question.errors %}
+            <li><strong>{{ error|escape }}</strong></li>
+            {% endfor %}
+        </ol>
+        {% endif %}
+        <label class="small mb-1" for="{{ form.question.id_for_label }}">
+            {{ form.question.label_tag }}{{ forloop.counter }}</label>
+        {{ form.question }}
+    </div>
+    <div class="form-group mt-2">
+        {% if form.question_tag.errors %}
+        <ol>
+            {% for error in form.question_tag.errors %}
+            <li><strong>{{ error|escape }}</strong></li>
+            {% endfor %}
+        </ol>
+        {% endif %}
+        <div class="row">
+            {% for each in form.question_tag %}
+            <div class="col-md-2">
+                {{ each }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
     <hr>
-    {{ evaluation_form.management_form }}
-    {% for each in evaluation_form %}
-    {{ each }}
-    <br>
     {% endfor %}
-    <button type="submit">Submit</button>
+    <div class="form-group">
+        {% if comment_form.comment.errors %}
+        <ol>
+            {% for error in comment_form.comment.errors %}
+            <li><strong>{{ error|escape }}</strong></li>
+            {% endfor %}
+        </ol>
+        {% endif %}
+        <label class="small mb-1" for="{{ comment_form.comment.id_for_label }}">
+            {{ comment_form.comment.label_tag }}</label>
+        {{ comment_form.comment }}
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            {% if comment_form.status.errors %}
+            <ol>
+                {% for error in comment_form.status.errors %}
+                <li><strong>{{ error|escape }}</strong></li>
+                {% endfor %}
+            </ol>
+            {% endif %}
+            <label class="small mb-1" for="{{ comment_form.comment.id_for_label }}">
+                {{ comment_form.status.label_tag }}</label>
+            {{ comment_form.status }}
+        </div>
+        <div class="form-group col-md-6">
+            <label class="small mb-2" for="btn">
+                Submit</label>
+            <button id="btn" class="btn btn-block btn-success mt-1" type="submit">Submit</button>
+        </div>
+    </div>
 </form>
-
-
+{% else %}
+<table class="table mb-5">
+    <thead class="thead-light">
+    <tr>
+        <th>Questions</th>
+        <th>Answers</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for each in schedule.candidate.evaluation_set.all %}
+        <tr>
+            <td>{{ each.question }}</td>
+            <td>{{ each.get_question_tag_display }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
 <hr>
-
-<!--{% for each in questions %}-->
-<!--<div class="row">-->
-<!--    <div class="col-md-6">-->
-<!--        <h5>{{ each }}</h5>-->
-<!--    </div>-->
-<!--    <div class="col-md-6">-->
-<!--        <select class="form-control" name="{{ each.id }}">-->
-<!--            {% for each in question_tag %}-->
-<!--            <option value="{{ forloop.counter }}">{{ each.1 }}</option>-->
-<!--            {% endfor %}-->
-<!--        </select>-->
-<!--    </div>-->
-<!--</div>-->
-<!--{% endfor %}-->
+<h2>Comment From Interviewer</h2>
+<p class="my-2 mx-5">{{ schedule.comment }}</p>
+{% endif %}
 
 {% endblock %}
 
@@ -84,6 +147,17 @@
         minDate: moment()
     });
     });
+
+
+
+
+
+
+
+
+
+
+
 
 
 

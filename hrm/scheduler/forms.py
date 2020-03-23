@@ -71,27 +71,19 @@ class EvaluationForm(forms.Form):
             }
         )
     )
-    question_tag = forms.ChoiceField()
+    question_tag = forms.ChoiceField(
+        widget=forms.RadioSelect(
+            attrs={
+                'type': "radio",
+                'class': "form-control-check-input py-2"
+            }
+        ),
+        required=False
+    )
 
     def __init__(self, *args, **kwargs):
         super(EvaluationForm, self).__init__(*args, **kwargs)
-        self.fields['question_tag'].choices = Evaluation.QUESTION_TAG
-
-
-class BaseEvaluationFormSet(BaseFormSet):
-
-        def clean(self):
-            if any(self.errors):
-                return
-            titles = []
-            for form in self.forms:
-                if self.can_delete and self._should_delete_form(form):
-                    continue
-                print(form.cleaned_data)
-                title = form.cleaned_data.get('title')
-                if title in titles:
-                    raise forms.ValidationError("Articles in a set must have distinct titles.")
-                titles.append(title)
+        self.fields['question_tag'].choices = Evaluation.QUESTION_TAG[1:]
 
 
 class ApplyForm(forms.ModelForm):
@@ -139,3 +131,20 @@ class AddressForm(forms.ModelForm):
         for field in self.fields:
             self.fields[field].required = False
         self.fields['experience'].choices = Candidate.EXPERIENCE_CHOICE
+
+
+class ArticleForm(forms.Form):
+    title = forms.CharField()
+    pub_date = forms.DateField()
+
+    data = {
+        'form-TOTAL_FORMS': '2',
+        'form-INITIAL_FORMS': '0',
+        'form-MAX_NUM_FORMS': '',
+        'form-0-title': 'Test0',
+        'form-0-pub_date': '1904-06-16',
+        'form-1-title': 'Test1',
+        'form-1-pub_date': '1904-06-16',
+        'form-2-title': 'Test2',
+        'form-2-pub_date': '1904-06-16',
+    }
