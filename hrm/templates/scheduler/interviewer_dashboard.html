@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}
+<title>Schedule List</title>
+{% endblock %}
+
+{% block content %}
+<div class="breadcrumb mb-4">
+    <li class="breadcrumb-item pt-1 text-center"><a href="{% url 'accounts:home' %}">Home</a></li>
+    <li class="breadcrumb-item pt-1 text-center">Schedule List</li>
+</div>
+
+<hr>
+
+<div class="container">
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a href="" data-target="#today" data-toggle="tab" class="nav-link active">Today's Interviews</a>
+        </li>
+        <li class="nav-item">
+            <a href="" data-target="#upcoming" data-toggle="tab" class="nav-link">Upcoming Interviews</a>
+        </li>
+        <li class="nav-item">
+            <a href="" data-target="#conducted" data-toggle="tab" class="nav-link">Conducted Interviews</a>
+        </li>
+    </ul>
+    <div class="tab-content py-4">
+        <div class="tab-pane active" id="today">
+            <table class="table mb-5">
+                <thead class="thead-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Schedule</th>
+                    <th>Contact</th>
+                    <th>Time</th>
+                    <th>Info</th>
+                </tr>
+                </thead>
+                {% for each in object_list %}
+                {% now 'd-m-Y' as to %}
+                {% if user == each.interviewer and each.status == each.NOT_SPECIFY and each.schedule_time|date:'d-m-Y' == to %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        {{ each.candidate.first_name }}
+                        <small>{{ each.candidate.last_name }}</small>
+                    </td>
+                    <td>
+                        {{ each.get_interview_type_display }}<br>
+                        {{ each.candidate.applied_for.post }}
+                    </td>
+                    <td>
+                        {{ each.candidate.email }}<br>
+                        {{ each.candidate.mobile }}
+                    </td>
+                    <td>
+                        {{ each.schedule_time|date:'d-m-Y' }}
+                        <br>
+                        {{ each.schedule_time|time:'TIME_FORMAT' }}
+                    </td>
+                    <td><a href="{{ each.get_absolute_url }}">Show More...</a></td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </table>
+        </div>
+        <div class="tab-pane" id="upcoming">
+            <table class="table mb-5">
+                <thead class="thead-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Schedule</th>
+                    <th>Contact</th>
+                    <th>Time</th>
+                    <th>Info</th>
+                </tr>
+                </thead>
+                {% for each in object_list %}
+                {% now 'd-m-Y' as to %}
+                {% if user == each.interviewer and each.status == each.NOT_SPECIFY and each.schedule_time|date:'d-m-Y' != to %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        {{ each.candidate.first_name }}
+                        <small>{{ each.candidate.last_name }}</small>
+                    </td>
+                    <td>
+                        {{ each.get_interview_type_display }}<br>
+                        {{ each.candidate.applied_for.post }}
+                    </td>
+                    <td>
+                        {{ each.candidate.email }}<br>
+                        {{ each.candidate.mobile }}
+                    </td>
+                    <td>
+                        {{ each.schedule_time|date:'d-m-Y' }}
+                        <br>
+                        {{ each.schedule_time|time:'TIME_FORMAT' }}
+                    </td>
+                    <td><a href="{{ each.get_absolute_url }}">Show More...</a></td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </table>
+        </div>
+        <div class="tab-pane" id="conducted">
+            <table class="table mb-5">
+                <thead class="thead-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Schedule</th>
+                    <th>Contact</th>
+                    <th>Time</th>
+                    <th>Info</th>
+                </tr>
+                </thead>
+                {% for each in object_list %}
+                {% if user == each.interviewer and each.status != each.NOT_SPECIFY %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        {{ each.candidate.first_name }}
+                        <small>{{ each.candidate.last_name }}</small>
+                    </td>
+                    <td>
+                        {{ each.get_interview_type_display }}<br>
+                        {{ each.candidate.applied_for.post }}
+                    </td>
+                    <td>
+                        {{ each.candidate.email }}<br>
+                        {{ each.candidate.mobile }}
+                    </td>
+                    <td>
+                        {{ each.schedule_time|date:'d-m-Y' }}
+                        <br>
+                        {{ each.schedule_time|time:'TIME_FORMAT' }}
+                    </td>
+                    <td><a href="{{ each.get_absolute_url }}">Show More...</a></td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,38 +1,67 @@
 {% extends 'base.html' %}
 {% block title %}
 <title>Candidate List</title>
+<style>
+    #all{
+        text-decoration: none;
+    }
+
+
+</style>
 {% endblock %}
 {% block content %}
 <div class="breadcrumb mb-4">
     <li class="breadcrumb-item pt-1 text-center"><a href="{% url 'accounts:home' %}">Home</a></li>
     <li class="breadcrumb-item pt-1 text-center">Dashboard</li>
+    <div class="d-none d-md-inline-block form-inline ml-auto mr-0 mr-md-3 my-2 my-md-0">
+        <div class="input-group">
+            <input aria-describedby="basic-addon2" aria-label="Search" class="form-control" id="search"
+                   placeholder="Search for..."
+                   type="text"/>
+            <div class="input-group-append">
+                <button class="btn btn-primary" type="button"><i class="fa fa-search"></i></button>
+            </div>
+        </div>
+    </div>
 </div>
+
+<div class="list-group" id="result">
+
+</div>
+
+<hr>
 
 <ul class="nav nav-tabs" id="myTab" role="tablist">
     <li class="nav-item">
-        <a class="nav-link active" id="schedule-tab" data-toggle="tab" href="#schedule" role="tab"
-           aria-controls="schedule" aria-selected="true">Today's Schedules</a>
+        <a aria-controls="schedule" aria-selected="true" class="nav-link active" data-toggle="tab" href="#schedule"
+           id="schedule-tab" role="tab">Today's Schedules</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" id="candidate-tab" data-toggle="tab" href="#candidate" role="tab" aria-controls="candidate"
-           aria-selected="false">New Candidates</a>
+        <a aria-controls="candidate" aria-selected="false" class="nav-link" data-toggle="tab" href="#candidate"
+           id="candidate-tab"
+           role="tab">New Candidates</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" id="all_schedule-tab" data-toggle="tab" href="#all_schedule" role="tab"
-           aria-controls="all_schedule" aria-selected="true">All Schedules</a>
+        <a aria-controls="all_schedule" aria-selected="true" class="nav-link" data-toggle="tab" href="#all_schedule"
+           id="all_schedule-tab" role="tab">All Schedules</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" id="all_candidate-tab" data-toggle="tab" href="#all_candidate" role="tab"
-           aria-controls="all_candidate" aria-selected="false">All Candidates</a>
+        <a aria-controls="all_candidate" aria-selected="false" class="nav-link" data-toggle="tab" href="#all_candidate"
+           id="all_candidate-tab" role="tab">All Candidates</a>
+    </li>
+    <li class="nav-item">
+        <a aria-controls="conducted_schedules" aria-selected="false" class="nav-link" data-toggle="tab"
+           href="#conducted_schedules" id="conducted_schedules-tab" role="tab">Conducted Schedules</a>
     </li>
 </ul>
 <div class="tab-content my-2" id="myTabContent">
-    <div class="tab-pane fade show active" id="schedule" role="tabpanel" aria-labelledby="schedule-tab">
+    <div aria-labelledby="schedule-tab" class="tab-pane fade show active" id="schedule" role="tabpanel">
         <table class="table mb-5">
             <thead class="thead-light">
             <tr>
                 <th>ID</th>
                 <th>Name</th>
+                <th>Current Status</th>
                 <th>Schedules For</th>
                 <th>Interviewer</th>
                 <th>Time</th>
@@ -42,14 +71,23 @@
             <tbody>
             {% for each in schedules %}
             {% now 'd-m-Y' as to %}
-            {% if each.schedule_time|date:'d-m-Y' == to %}
+            {% if each.schedule_time|date:'d-m-Y' == to and each.status == each.NOT_SPECIFY %}
+            {% if each.interviewer == user %}
+            <tr class="bg-success">
+                {% else %}
             <tr>
+                {% endif %}
                 <td>{{ each.id }}</td>
                 <td>
                     {{ each.candidate.first_name }}
                     <small>{{ each.candidate.last_name }}</small>
                 </td>
                 <td>{{ each.candidate.get_status_display }}</td>
+                <td>
+                    {{ each.get_interview_type_display }}
+                    <br>
+                    <small>{{ each.get_status_display }}</small>
+                </td>
                 <td>
                     {{ each.interviewer.first_name.capitalize }}
                     <small>{{ each.interviewer.last_name.capitalize }}</small>
@@ -66,7 +104,7 @@
             </tbody>
         </table>
     </div>
-    <div class="tab-pane fade" id="candidate" role="tabpanel" aria-labelledby="candidate-tab">
+    <div aria-labelledby="candidate-tab" class="tab-pane fade" id="candidate" role="tabpanel">
         <table class="table mb-5">
             <thead class="thead-light">
             <tr>
@@ -94,7 +132,7 @@
             </tbody>
         </table>
     </div>
-    <div class="tab-pane fade" id="all_schedule" role="tabpanel" aria-labelledby="all_schedule-tab">
+    <div aria-labelledby="all_schedule-tab" class="tab-pane fade" id="all_schedule" role="tabpanel">
         <table class="table mb-5">
             <thead class="thead-light">
             <tr>
@@ -108,15 +146,14 @@
             </thead>
             <tbody>
             {% for each in schedules %}
-            {% now 'd-m-Y' as to %}
-            {% if each.schedule_time|date:'d-m-Y' == to %}
+            {% if each.status == each.NOT_SPECIFY %}
             <tr>
                 <td>{{ each.id }}</td>
                 <td>
                     {{ each.candidate.first_name }}
                     <small>{{ each.candidate.last_name }}</small>
                 </td>
-                <td>{{ each.candidate.get_status_display }}</td>
+                <td>{{ each.get_interview_type_display }}</td>
                 <td>
                     {{ each.interviewer.first_name.capitalize }}
                     <small>{{ each.interviewer.last_name.capitalize }}</small>
@@ -126,14 +163,14 @@
                     <br>
                     {{ each.schedule_time|time:'TIME_FORMAT' }}
                 </td>
-                <td><a href="{{ candidate.get_absolute_url }}">Show More...</a></td>
+                <td><a href="{{ each.get_absolute_url }}">Show More...</a></td>
             </tr>
             {% endif %}
             {% endfor %}
             </tbody>
         </table>
     </div>
-    <div class="tab-pane fade" id="all_candidate" role="tabpanel" aria-labelledby="all_candidate-tab">
+    <div aria-labelledby="all_candidate-tab" class="tab-pane fade" id="all_candidate" role="tabpanel">
         <table class="table mb-5">
             <thead class="thead-light">
             <tr>
@@ -159,5 +196,83 @@
             </tbody>
         </table>
     </div>
+    <div aria-labelledby="conducted_schedules-tab" class="tab-pane fade" id="conducted_schedules" role="tabpanel">
+        <table class="table mb-5">
+            <thead class="thead-light">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Current Status</th>
+                <th>Schedules For</th>
+                <th>Interviewer</th>
+                <th>Time</th>
+                <th>Info</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for each in schedules %}
+            {% if each.status != each.NOT_SPECIFY %}
+            <tr>
+                <td>{{ each.id }}</td>
+                <td>
+                    {{ each.candidate.first_name }}
+                    <small>{{ each.candidate.last_name }}</small>
+                </td>
+                <td>{{ each.candidate.get_status_display }}</td>
+                <td>
+                    {{ each.get_interview_type_display }}
+                    <br>
+                    <small>{{ each.get_status_display }}</small>
+                </td>
+                <td>
+                    {{ each.interviewer.first_name.capitalize }}
+                    <small>{{ each.interviewer.last_name.capitalize }}</small>
+                </td>
+                <td>
+                    {{ each.schedule_time|date:'d-m-Y' }}
+                    <br>
+                    {{ each.schedule_time|time:'TIME_FORMAT' }}
+                </td>
+                <td><a href="{{ each.get_absolute_url }}">Show More...</a></td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
+{% endblock %}
+
+{% block js %}
+<script>
+    $(document).ready(function(){
+        $('#search').keyup(function (){
+            var q = $(this).val();
+             $.ajax({
+                url:'{% url 'scheduler:search' %}',
+                data:{
+                        q: q
+                },
+                success:function(response){
+                    var str = '';
+                    $.each(response.data, function(key, value) {
+                        str2 = "/scheduler/candidate_detail/" + value.id;
+                        str = str + '<p><a href="/scheduler/candidate_detail/'+ value.id +'" class="list-group-item list-group-item-action"><b class="text-primary  ml-5"> '+ value.id +' </b><b class="text-primary  ml-5"> '+ value.first_name +' </b><b class="text-primary"> '+ value.last_name +' </b><b class="text-primary ml-5"> '+ value.mobile +' </b><b class="text-primary ml-5"> '+ value.email  +' </b></a></p>';
+                    });
+                    $('#result').html(str);
+                    if (q == "")
+                    {
+                        $('#result').html('');
+
+                    }
+                }
+            });
+        });
+    });
+
+
+
+
+
+</script>
 {% endblock %}

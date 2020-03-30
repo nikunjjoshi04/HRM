@@ -1,18 +1,24 @@
+import json
+from django.core.serializers import serialize
 from builtins import super
 from django.utils import timezone
-from django.shortcuts import render, reverse
+from django.shortcuts import render, reverse, HttpResponseRedirect, redirect
 from django.urls import reverse_lazy
-from accounts.models import Candidate, Address, Questions, Evaluation
-from django.views.generic import TemplateView, DetailView, ListView, FormView
+from accounts.models import Candidate, Address, Questions
+from django.views.generic import TemplateView, DetailView, ListView, FormView, DeleteView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from .forms import ScheduleForm, ApplyForm, AddressForm, EvaluationForm, EvaluationCommentForm
-from .models import Schedule
+from .models import Schedule, Evaluation
 from django.utils.crypto import get_random_string
 from django.forms import modelformset_factory, formset_factory
 from extra_views import FormSetView
-from .utils import URL
+from django.db.models import Q
+from django.http import JsonResponse
+from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.mail import send_mail
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.utils.decorators import method_decorator
 
 
 # Create your views here.
@@ -21,24 +27,30 @@ from django.core.mail import send_mail
 class Apply(FormView):
     form_class = ApplyForm
     template_name = 'scheduler/apply.html'
+    success_url = None
 
     def form_valid(self, form):
         token = get_random_string(length=8)
         instance = form.save(commit=False)
         instance.token = token
         instance.save()
-        self.success_url = reverse('scheduler:verify', args=[token])
-        # data = URL.encryption(self, pk=instance.order.id)
-        # print("B_SEND :-  ", data)
-        # msg = 'http://127.0.0.1:8000/scheduler/verify/' + str(data)
-        # email = 'nikunj.joshi@trootech.com'
-        # email1 = instance.order.customer.email
-        # send_mail("Customer Test", msg, settings.EMAIL_HOST_USER, [email, email1], fail_silently=False)
+        self.success_url = reverse('scheduler:success_apply', args=[token])
+        msg = 'http://127.0.0.1:8000/scheduler/verify/' + str(token)
+        email = 'nikunjjoshi04@gmail.com'
+        send_mail("Apply Test", msg, settings.EMAIL_HOST_USER, [email], fail_silently=False)
         return super(Apply, self).form_valid(form=form)
 
 
+class SuccessApply(TemplateView):
+    template_name = 'scheduler/success_apply.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(SuccessApply, self).get_context_data(**kwargs)
+        context['candidate'] = Candidate.objects.get(token=self.kwargs.get('token', None))
+        return context
+
+
 class VerifyView(FormView):
-    # AddressFormSet = formset_factory(form=AddressForm, extra=2)
     form_class = AddressForm
     template_name = 'scheduler/verify.html'
 
@@ -62,6 +74,7 @@ class VerifyView(FormView):
         return reverse('scheduler:profile', args=[self.kwargs.get('token', None)])
 
 
+@method_decorator(xframe_options_exempt, name='get')
 class ProfileView(TemplateView):
     template_name = 'scheduler/candidate_profile.html'
 
@@ -111,11 +124,9 @@ class CandidateDetailView(Detail, FormView):
     model = Candidate
     template_name = 'scheduler/candidate_detail.html'
     form_class = ScheduleForm
-    # success_url = reverse_lazy('scheduler:hr_dashboard')
 
     def form_valid(self, form):
         interview_type = form.cleaned_data['interview_type']
-        print(interview_type)
         candidate = Candidate.objects.get(id=self.kwargs.get('pk', None))
         if interview_type == Candidate.TECHNICAL:
             candidate.technical_round()
@@ -123,8 +134,6 @@ class CandidateDetailView(Detail, FormView):
             candidate.practical_round()
         elif interview_type == Candidate.HR:
             candidate.hr_round()
-        elif interview_type == Candidate.REJECTED:
-            candidate.reject()
         else:
             candidate.status = Candidate.SHORTLIST
         candidate.save()
@@ -135,14 +144,19 @@ class CandidateDetailView(Detail, FormView):
         kwargs = super(CandidateDetailView, self).get_form_kwargs()
         kwargs['pk'] = self.kwargs.get('pk', None)
         kwargs['user'] = self.request.user
-        print(kwargs['pk'])
         return kwargs
 
     def get_success_url(self):
         return reverse('scheduler:candidate_detail', args=[self.kwargs.get('pk', None)])
 
+    def get_context_data(self, **kwargs):
+        context = super(CandidateDetailView, self).get_context_data(**kwargs)
+        context['hrs'] = User.objects.filter(is_staff=True, is_superuser=False)
+        context['interviewer'] = User.objects.filter(is_staff=False, is_superuser=False)
+        return context
 
-class ScheduleListView(PermissionRequiredMixin, ListView):
+
+class InterviewerDashboardView(PermissionRequiredMixin, ListView):
     permission_required = [
         'scheduler.change_schedule',
         'scheduler.view_schedule'
@@ -150,11 +164,52 @@ class ScheduleListView(PermissionRequiredMixin, ListView):
     login_url = 'accounts:login'
     permission_denied_message = 'Not Allow...!!!'
     model = Schedule
-    template_name = 'scheduler/interviewer_schedule_list.html'
+    template_name = 'scheduler/interviewer_dashboard.html'
 
 
-class ScheduleDetailView(FormSetView):
-    template_name = 'scheduler/schedule_detail.html'
+class ScheduleDetailView(View):
+    def get(self, request, pk):
+        schedule = Schedule.objects.get(id=self.kwargs.get('pk', None))
+        if schedule.interview_type == Schedule.TECHNICAL:
+            print(schedule.interview_type)
+            return redirect(reverse('scheduler:technical_view', args=[self.kwargs.get('pk', None)]))
+        else:
+            print(schedule.interview_type)
+            return redirect(reverse('scheduler:practical_view', args=[self.kwargs.get('pk', None)]))
+
+
+class PracticalView(Detail, FormView):
+    permission_required = [
+        'scheduler.change_schedule',
+        'scheduler.view_schedule'
+    ]
+    login_url = 'accounts:login'
+    permission_denied_message = 'Not Allow...!!!'
+    model = Schedule
+    template_name = 'scheduler/practical_schedule_detail.html'
+    form_class = EvaluationCommentForm
+
+    def form_valid(self, form):
+        comment = form.cleaned_data['comment']
+        status = form.cleaned_data['status']
+        schedule = Schedule.objects.get(id=self.kwargs.get('pk', None))
+        schedule.comment = comment
+        schedule.status = status
+        if status == Schedule.REJECTED:
+            schedule.candidate.status = Candidate.REJECTED
+            schedule.candidate.save()
+        if schedule.interview_type == Schedule.HR and status == Schedule.SELECTED:
+            schedule.candidate.select()
+            schedule.candidate.save()
+        schedule.save()
+        return super(PracticalView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse('scheduler:schedule_detail', args=[self.kwargs.get('pk', None)])
+
+
+class TechnicalView(FormSetView):
+    template_name = 'scheduler/technical_schedule_detail.html'
     form_class = EvaluationForm
     # initial = [{'question': 'QUE1'}, {'question': 'QUE2'}]
     factory_kwargs = {'extra': 0, 'max_num': None,
@@ -169,7 +224,7 @@ class ScheduleDetailView(FormSetView):
             questions_obj = Questions.objects.get(question=question)
             Evaluation.objects.create(
                 question=questions_obj,
-                candidate=schedule.candidate,
+                schedule=schedule,
                 question_tag=question_tag
             )
         form_comment = self.comment_form(self.request.POST)
@@ -178,15 +233,18 @@ class ScheduleDetailView(FormSetView):
             status = form_comment.cleaned_data.get('status', None)
             schedule.comment = comment
             schedule.status = status
+            if status == Schedule.REJECTED:
+                schedule.candidate.status = Candidate.REJECTED
+                schedule.candidate.save()
             schedule.save()
-        return super(ScheduleDetailView, self).formset_valid(formset)
+        return super(TechnicalView, self).formset_valid(formset)
 
     def get_success_url(self):
         return reverse('scheduler:schedule_detail', args=[self.kwargs.get('pk', None)])
 
     def formset_invalid(self, formset):
         print(formset)
-        return super(ScheduleDetailView, self).formset_invalid(formset)
+        return super(TechnicalView, self).formset_invalid(formset)
 
     def get_initial(self):
         initial = []
@@ -196,7 +254,48 @@ class ScheduleDetailView(FormSetView):
 
     def get_context_data(self, **kwargs):
         pk = self.kwargs.get('pk', None)
-        context = super(ScheduleDetailView, self).get_context_data(**kwargs)
-        context['schedule'] = Schedule.objects.get(id=pk)
+        context = super(TechnicalView, self).get_context_data(**kwargs)
+        try:
+            context['schedule'] = Schedule.objects.get(id=pk)
+        except Exception as e:
+            context['schedule'] = None
+            print('Error Is :- ', e, type(e))
         context['comment_form'] = self.comment_form
         return context
+
+
+class ScheduleDeleteView(DeleteView):
+    model = Schedule
+
+    def get(self, request, *args, **kwargs):
+        return self.post(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+        candidate = self.object.candidate
+        self.object.delete()
+        try:
+            status = candidate.candidate_schedule.last().interview_type
+        except AttributeError:
+            status = Candidate.SHORTLIST
+        candidate.status = status
+        candidate.save()
+        return HttpResponseRedirect(success_url)
+
+    def get_success_url(self):
+        return reverse('scheduler:candidate_detail', args=[self.kwargs.get('candidate_id', None)])
+
+
+class Search(View):
+
+    def get(self, request, *args, **kwargs2):
+        q = request.GET.get('q', None)
+        data = Candidate.objects.filter(
+            Q(first_name__icontains=q) |
+            Q(last_name__icontains=q) |
+            Q(email__icontains=q) |
+            Q(mobile__icontains=q)
+        )
+        lst = list(data.values('id', 'first_name', 'last_name', 'mobile', 'email'))
+        return JsonResponse({'data': lst})

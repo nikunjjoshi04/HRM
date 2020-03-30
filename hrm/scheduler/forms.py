@@ -2,35 +2,29 @@ from dataclasses import fields
 import datetime
 from django.utils import timezone
 from django import forms
-from accounts.models import Candidate, Address, Questions, Evaluation
-from .models import Schedule
+from accounts.models import Candidate, Address, Questions
+from .models import Schedule, Evaluation
 from django.contrib.auth.models import User
 from django.forms import modelformset_factory, formset_factory, BaseFormSet
 
 
 class ScheduleForm(forms.ModelForm):
-    interview_type = forms.ChoiceField(
-        widget=forms.Select(
-            attrs={
-                'class': 'form-control py-2'
-            }
-        )
-    )
 
     class Meta:
         model = Schedule
-        fields = ['interviewer', 'schedule_time']
+        fields = ['interviewer', 'schedule_time', 'interview_type']
         widgets = {
             'interviewer': forms.Select(attrs={'class': 'form-control py-2'}),
             'schedule_time': forms.DateTimeInput(attrs={'class': 'form-control py-2'}),
+            'interview_type': forms.Select(attrs={'class': 'form-control py-2'}),
         }
 
     def __init__(self, *args, **kwargs):
         self.pk = kwargs.pop('pk', None)
         self.user = kwargs.pop('user', None)
         super(ScheduleForm, self).__init__(*args, **kwargs)
-        self.fields['interviewer'].queryset = User.objects.filter(is_staff=False)
-        self.fields['interview_type'].choices = Candidate.STATUS_TAG[1:]
+        self.fields['interviewer'].queryset = User.objects.all()
+        self.fields['interview_type'].choices = Candidate.STATUS_TAG[1:4]
 
     def save(self, commit=True):
         instance = super(ScheduleForm, self).save(commit=False)
@@ -59,7 +53,7 @@ class EvaluationCommentForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(EvaluationCommentForm, self).__init__(*args, **kwargs)
-        self.fields['status'].choices = Schedule.STATUS_TAG
+        self.fields['status'].choices = Schedule.STATUS_TAG[1:]
 
 
 class EvaluationForm(forms.Form):

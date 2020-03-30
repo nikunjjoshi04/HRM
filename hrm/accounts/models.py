@@ -13,7 +13,7 @@ class Vacancies(models.Model):
     slug = models.SlugField(null=True, blank=True)
 
     def __str__(self):
-        return self.post
+        return '{} {}'.format(self.post, self.technologies)
 
 
 class Candidate(models.Model):
@@ -22,12 +22,14 @@ class Candidate(models.Model):
     PRACTICAL = 'practical'
     HR = 'hr'
     REJECTED = 'rejected'
+    SELECTED = 'selected'
     STATUS_TAG = [
         (SHORTLIST, 'Short Listed'),
         (TECHNICAL, 'For Technical Round'),
         (PRACTICAL, 'For Practical Round'),
         (HR, 'For HR Round'),
         (REJECTED, 'Rejected'),
+        (SELECTED, 'Selected'),
     ]
     EXPERIENCE_CHOICE = [
         ('2', '0 - 1'),
@@ -65,6 +67,10 @@ class Candidate(models.Model):
     def hr_round(self):
         pass
 
+    @transition(field='status', source=HR, target=SELECTED)
+    def select(self):
+        pass
+
     @transition(field='status', source=[SHORTLIST, TECHNICAL, PRACTICAL, HR], target=REJECTED)
     def reject(self):
         pass
@@ -86,26 +92,3 @@ class Questions(models.Model):
 
     def __str__(self):
         return self.question
-
-
-class Evaluation(models.Model):
-    NOT_SPECIFIED = 'not_specified'
-    UNSATISFACTORY = 'unsatisfactory'
-    SATISFACTORY = 'satisfactory'
-    AVERAGE = 'average'
-    ABOVE_AVERAGE = 'above_average'
-    EXCEPTIONAL = 'exceptional'
-    QUESTION_TAG = [
-        (NOT_SPECIFIED, 'Not Specified'),
-        (UNSATISFACTORY, 'Unsatisfactory'),
-        (SATISFACTORY, 'satisfactory'),
-        (AVERAGE, 'Average'),
-        (ABOVE_AVERAGE, 'Above Average'),
-        (EXCEPTIONAL, 'Exceptional'),
-    ]
-    question = models.ForeignKey(Questions, on_delete=models.CASCADE)
-    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
-    question_tag = models.CharField(default=NOT_SPECIFIED, choices=QUESTION_TAG, max_length=50)
-
-    def __str__(self):
-        return '{} {}'.format(self.candidate, self.question_tag)

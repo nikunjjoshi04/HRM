@@ -5,7 +5,6 @@ from .models import *
 admin.site.register(Vacancies)
 admin.site.register(Address)
 admin.site.register(Questions)
-admin.site.register(Evaluation)
 
 
 class AddressInline(admin.StackedInline):

@@ -17,43 +17,51 @@
                     <a href="" data-target="#profile" data-toggle="tab" class="nav-link active">Profile</a>
                 </li>
                 <li class="nav-item">
-                    <a href="" data-target="#edit" data-toggle="tab" class="nav-link">Edit</a>
+                    <a href="" data-target="#schedule" data-toggle="tab" class="nav-link">Create Schedule</a>
                 </li>
             </ul>
             <div class="tab-content py-4">
                 <div class="tab-pane active" id="profile">
                     <h2 class="mb-4">Candidate Info</h2>
-                    <h5 class="mb-3">{{ candidate.first_name.capitalize }}
-                        <small>{{ candidate.last_name.capitalize }}
-                        </small>
-                    </h5>
+                    <div class="row bg-light pt-3 pb-0 my-3">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">{{ candidate.first_name.capitalize }}
+                                <small>{{ candidate.last_name.capitalize }}
+                                </small>
+                            </h5>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="mb-3">{{ candidate.get_status_display }}</h5>
+                        </div>
+                    </div>
                     <div class="row">
                         <div class="col-md-6">
-                            <h6>Applied For :-</h6>
-                            <p> {{ candidate.applied_for.post.capitalize }}</p>
-                            <h6>Contact :-</h6>
-                            <div>
+                            <h5>Applied For :-</h5>
+                            <p class="ml-5"> {{ candidate.applied_for.post.capitalize }}</p>
+                            <hr>
+                            <h5>Contact :-</h5>
+                            <div class="ml-5">
                                 <p><i class="fa fa-mobile" aria-hidden="true"></i> {{ candidate.mobile }}</p>
                                 <p><i class="fa fa-envelope-o" aria-hidden="true"></i> {{ candidate.email }}</p>
                             </div>
                         </div>
 
                         <div class="col-md-6">
-                            <div class="row">
-                                <h6> &emsp;Experience :- </h6>&emsp;
-                                <p> {{ candidate.experience }} </p>
-                            </div>
-
+                            <h5> Experience :- </h5>
+                            <p class="ml-5"> {{ candidate.experience }} </p>
                             <hr>
-                            <p> {{ candidate.address.first.city.capitalize }} <small>
-                                ({{ candidate.address.first.state.capitalize }})</small></p>
-                            <p> {{ candidate.address.first.street.capitalize }} </p>
-                            <p> {{ candidate.address.first.landmark }} - 360470</p>
+                            <h5 class="mb-0"> Address :- </h5>
+                            <div class="ml-5">
+                                <p> {{ candidate.address.first.city.capitalize }} <small>
+                                    ({{ candidate.address.first.state.capitalize }})</small></p>
+                                <p> {{ candidate.address.first.street.capitalize }} </p>
+                                <p> {{ candidate.address.first.landmark }} - 360470</p>
+                            </div>
                         </div>
                     </div>
                     <!--/row-->
                 </div>
-                <div class="tab-pane" id="edit">
+                <div class="tab-pane" id="schedule">
                     <h2 class="mb-4">Create Schedule</h2>
                     <div class="container py-2 px-2">
                         <form method="POST">
@@ -118,7 +126,7 @@
         </div>
         <div class="col-lg-4 order-lg-1 text-center">
             <img src="//placehold.it/150" class="mx-auto img-fluid img-circle d-block" alt="avatar">
-            <h6 class="mt-2">Upload a different photo</h6>
+            <h5 class="mt-2">Upload a different photo</h5>
             <label class="custom-file disabled">
                 <input type="file" id="file" class="custom-file-input">
                 <span class="custom-file-control">Choose file</span>
@@ -138,14 +146,14 @@
         </tr>
         </thead>
         <tbody>
-        {% for each in candidate.schedule_set.all %}
+        {% for each in candidate.candidate_schedule.all %}
         <tr>
             <td>{{ each.id }}</td>
             <td>
                 {{ each.candidate.first_name }}
                 <small>{{ each.candidate.last_name }}</small>
             </td>
-            <td>{{ each.candidate.get_status_display }}</td>
+            <td>{{ each.get_interview_type_display }}</td>
             <td>
                 {{ each.interviewer.first_name.capitalize }}
                 <small>{{ each.interviewer.last_name.capitalize }}</small>
@@ -156,9 +164,17 @@
                 {{ each.schedule_time|time:'TIME_FORMAT' }}
             </td>
             <td>{{ each.get_status_display }}</td>
-            <td><a href="{{ candidate.get_absolute_url }}">Show More...</a></td>
+            <td>
+                <div class="row">
+                    <div class="col-md-6">
+                        <a href="{{ each.get_absolute_url }}">Details</a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{% url 'scheduler:schedule_delete' each.id candidate.id %}">Delete</a>
+                    </div>
+                </div>
+            </td>
         </tr>
-
         {% endfor %}
         </tbody>
     </table>
@@ -166,12 +182,40 @@
 {% endblock %}
 
 {% block js %}
+<script>
+
+</script>
 <script type="text/javascript">
     $(function () {
         $("#id_schedule_time").datetimepicker({
         format: 'YYYY-MM-DD HH:mm',
         minDate: moment()
     });
+    });
+
+
+</script>
+
+<script>
+    $(document).ready(function(){
+        $('#id_interviewer').html(
+            '<option value="" selected="">---------</option>{% for each in interviewer %}<option value="{{ each.id }}">{{ each.get_full_name }}</option>{% endfor %}'
+        )
+        $('#id_interview_type').change(function (){
+            var interview_type =  $(this).val();
+            if (interview_type == 'hr')
+            {
+             $('#id_interviewer').html(
+                '<option value="" selected="">---------</option>{% for each in hrs %}<option value="{{ each.id }}">{{ each.get_full_name }}</option>{% endfor %}'
+             )
+            }
+            else
+            {
+             $('#id_interviewer').html(
+                '<option value="" selected="">---------</option>{% for each in interviewer %}<option value="{{ each.id }}">{{ each.get_full_name }}</option>{% endfor %}'
+             )
+            }
+        });
     });
 
 

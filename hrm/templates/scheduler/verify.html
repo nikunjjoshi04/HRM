@@ -19,7 +19,29 @@
     </div>
 </div>
 
-<p>{{ candidate }}</p>
+<br>
+<div class="container">
+    <h3 class="mb-3">{{ candidate.first_name.capitalize }}
+        <small>{{ candidate.last_name.capitalize }}
+        </small>
+    </h3>
+    <div class="row my-3">
+        <div class="col-md-6">
+            <h6>Applied For :-</h6>
+            <p class="ml-5 mt-2"> {{ candidate.applied_for.post.capitalize }}</p>
+        </div>
+        <div class="col-md-6">
+           <h6>Contact :-</h6>
+            <div class="ml-5">
+                <p><i class="fa fa-mobile" aria-hidden="true"></i> {{ candidate.mobile }}</p>
+                <p><i class="fa fa-envelope-o" aria-hidden="true"></i> {{ candidate.email }}</p>
+            </div>
+        </div>
+    </div>
+    <!--/row-->
+</div>
+<hr>
+
 <div class="border py-2 px-2">
     <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
@@ -129,14 +151,6 @@
         //minDate: moment()
     });
     });
-
-
-
-
-
-
-
-
 </script>
 <script>
     $(function() {
@@ -175,6 +189,5 @@
               clearInterval(interval);
       }, 500);
     });
-
 </script>
 {% endblock %}

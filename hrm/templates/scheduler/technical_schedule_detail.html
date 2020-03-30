@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+<title>Candidate Detail</title>
+{% endblock %}
+{% block content %}
+<div class="breadcrumb mb-4">
+    {% if user.is_staff %}
+    <li class="breadcrumb-item pt-1 text-center"><a href="{% url 'scheduler:hr_dashboard' %}">Dashboard</a></li>
+    {% else %}
+    <li class="breadcrumb-item pt-1 text-center"><a href="{% url 'scheduler:interviewer_dashboard' %}">Dashboard</a></li>
+    {% endif %}
+    <li class="breadcrumb-item pt-1 text-center">Interview</li>
+</div>
+
+<div class="container">
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a href="" data-target="#profile" data-toggle="tab" class="nav-link active">Profile</a>
+        </li>
+        <li class="nav-item">
+            <a href="" data-target="#resume" data-toggle="tab" class="nav-link">Resume</a>
+        </li>
+    </ul>
+    <div class="tab-content py-4">
+        <div class="tab-pane active" id="profile">
+            <h2 class="mb-4">Candidate Info</h2>
+            <div class="row bg-light pt-3 pb-0 my-3">
+                <div class="col-md-6">
+                    <h5 class="mb-3">{{ schedule.candidate.first_name.capitalize }}
+                        <small>{{ schedule.candidate.last_name.capitalize }}
+                        </small>
+                    </h5>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="mb-3">{{ schedule.candidate.get_status_display }}</h5>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Applied For :-</h5>
+                    <p class="ml-5"> {{ schedule.candidate.applied_for.post.capitalize }}</p>
+                    <hr>
+                    <h5>Contact :-</h5>
+                    <div class="ml-5">
+                        <p><i class="fa fa-mobile" aria-hidden="true"></i> {{ schedule.candidate.mobile }}</p>
+                        <p><i class="fa fa-envelope-o" aria-hidden="true"></i> {{ schedule.candidate.email }}</p>
+                    </div>
+                    <h5>Interviewer :-</h5>
+                    <div class="ml-5">
+                        <p><i class="fa fa-user-o" aria-hidden="true"></i>
+                            {{ schedule.interviewer.get_full_name.capitalize}}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <h5> Experience :- </h5>
+                    <p class="ml-5"> {{ schedule.candidate.experience }} </p>
+                    <hr>
+                    <h5 class="mb-0"> Address :- </h5>
+                    <div class="ml-5">
+                        <p> {{ schedule.candidate.address.first.city.capitalize }} <small>
+                            ({{ schedule.candidate.address.first.state.capitalize }})</small></p>
+                        <p> {{ schedule.candidate.address.first.street.capitalize }} </p>
+                        <p> {{ schedule.candidate.address.first.landmark }} - 360470</p>
+                    </div>
+                </div>
+            </div>
+            <!--/row-->
+        </div>
+        <div class="tab-pane" id="resume">
+            <h2 class="mb-4">Resume</h2>
+            <img src="{{ schedule.candidate.resume.url }}">
+            <iframe src="{{ schedule.candidate.resume.url }}" height="600" width="100%"></iframe>
+
+        </div>
+    </div>
+</div>
+
+<hr>
+
+{% if schedule.comment == None and user == schedule.interviewer %}
+<form method="POST">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    {% for form in formset %}
+    {{ form.non_field_errors }}
+    <div class="form-group">
+        {% if form.question.errors %}
+        <ol>
+            {% for error in form.question.errors %}
+            <li><strong>{{ error|escape }}</strong></li>
+            {% endfor %}
+        </ol>
+        {% endif %}
+        <label class="small mb-1" for="{{ form.question.id_for_label }}">
+            {{ form.question.label_tag }}{{ forloop.counter }}</label>
+        {{ form.question }}
+    </div>
+    <div class="form-group mt-2">
+        {% if form.question_tag.errors %}
+        <ol>
+            {% for error in form.question_tag.errors %}
+            <li><strong>{{ error|escape }}</strong></li>
+            {% endfor %}
+        </ol>
+        {% endif %}
+        <div class="row">
+            {% for each in form.question_tag %}
+            <div class="col-md-2">
+                {{ each }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <hr>
+    {% endfor %}
+    <div class="form-group">
+        {% if comment_form.comment.errors %}
+        <ol>
+            {% for error in comment_form.comment.errors %}
+            <li><strong>{{ error|escape }}</strong></li>
+            {% endfor %}
+        </ol>
+        {% endif %}
+        <label class="small mb-1" for="{{ comment_form.comment.id_for_label }}">
+            {{ comment_form.comment.label_tag }}</label>
+        {{ comment_form.comment }}
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            {% if comment_form.status.errors %}
+            <ol>
+                {% for error in comment_form.status.errors %}
+                <li><strong>{{ error|escape }}</strong></li>
+                {% endfor %}
+            </ol>
+            {% endif %}
+            <label class="small mb-1" for="{{ comment_form.comment.id_for_label }}">
+                {{ comment_form.status.label_tag }}</label>
+            {{ comment_form.status }}
+        </div>
+        <div class="form-group col-md-6">
+            <label class="small mb-2" for="btn">
+                Submit</label>
+            <button id="btn" class="btn btn-block btn-success mt-1" type="submit">Submit</button>
+        </div>
+    </div>
+</form>
+{% else %}
+<table class="table mb-5">
+    <thead class="thead-light">
+    <tr>
+        <th>Questions</th>
+        <th>Answers</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for each in schedule.evaluation_set.all %}
+    <tr>
+        <td>{{ each.question }}</td>
+        <td>{{ each.get_question_tag_display }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<hr>
+<h2>Comment From Interviewer</h2>
+<p class="my-2 mx-5">{{ schedule.comment }}</p>
+<hr>
+<h2>Interview Status</h2>
+<p class="my-2 mx-5">{{ schedule.get_status_display }}</p>
+{% endif %}
+
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript">
+    $(function () {
+        $("#id_schedule_time").datetimepicker({
+        format: 'YYYY-MM-DD HH:mm',
+        minDate: moment()
+    });
+    });
+
+</script>
+{% endblock %}
