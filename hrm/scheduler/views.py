@@ -20,7 +20,6 @@ from django.core.mail import send_mail
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.utils.decorators import method_decorator
 
-
 # Create your views here.
 
 

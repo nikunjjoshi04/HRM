@@ -1,0 +1,6 @@
+python 3.7 or above
+Django-3.0.5 or above
+phonenumber_field :- 'pip install django-phonenumber-field'
+extra_views :- 'pip install django-extra-views'
+phonenumbers :- 'pip install phonenumbers'
+django_fsm :- 'pip install django_fsm'
